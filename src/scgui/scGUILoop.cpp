@@ -529,7 +529,7 @@ namespace SCGUILoop {
 				ImGui::InputFloat("Game Camera FOV", &SCGUIData::sysCamFov);
 				ImGui::InputFloat3("Game Camera Pos (x, y, z)", &SCGUIData::sysCamPos.x);
 				ImGui::InputFloat3("Game Camera LookAt (x, y, z)", &SCGUIData::sysCamLookAt.x);
-				ImGui::InputFloat4("Game Camera Rotation (w, x, y, z)", &SCGUIData::sysCamRot.w);
+				ImGui::InputFloat4("Game Camera Rotation (x, y, z, w)", &SCGUIData::sysCamRot.x);
 
 				if (ImGui::CollapsingHeader("Free Camera", ImGuiTreeNodeFlags_DefaultOpen)) {
 					ImGui::Checkbox("Enable Free Camera", &g_enable_free_camera);
