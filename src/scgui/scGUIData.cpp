@@ -12,6 +12,9 @@ namespace SCGUIData {
 	Vector3_t sysCamLookAt{};
 	Quaternion_t sysCamRot{};
 
+	bool enableCustomCamRot = false;
+	Quaternion_t customCamRot{ 0.0f, 0.0f, 0.0f, 1.0f }; // 默认初始值给个合法的四元数
+
 	void updateSysCamLookAt() {
 		BaseCamera::CameraPosRotToLookAt(sysCamPos, sysCamRot, &sysCamLookAt);
 	}

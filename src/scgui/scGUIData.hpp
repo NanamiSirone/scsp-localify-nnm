@@ -11,5 +11,8 @@ namespace SCGUIData {
 	extern Vector3_t sysCamLookAt;
 	extern Quaternion_t sysCamRot;
 
+	extern bool enableCustomCamRot;       // 是否启用自定义旋转覆盖
+	extern Quaternion_t customCamRot;     // 存储用户输入的自定义旋转
+
 	void updateSysCamLookAt();
 }

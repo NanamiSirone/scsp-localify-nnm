@@ -2698,6 +2698,23 @@ namespace
 				up->z = 0;
 				Unity_InternalLookAt_hook(_this, *pos, *up);
 			}
+			// ======== 处理我们的单独覆盖逻辑 ========
+			else if (SCGUIData::enableCustomCamRot) {
+				// 取出自定义输入
+				BaseCamera::CameraCalc::Quaternion q(
+					SCGUIData::customCamRot.w,
+					SCGUIData::customCamRot.x,
+					SCGUIData::customCamRot.y,
+					SCGUIData::customCamRot.z
+				);
+
+				// 归一化并利用已修复的底层操作符隐式转换
+				ret = static_cast<Quaternion_t>(q.normalized());
+
+				// 写回引擎
+				Unity_set_rotation_hook(_this, ret);
+			}
+
 		}
 
 		return ret;

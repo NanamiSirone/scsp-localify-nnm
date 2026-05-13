@@ -64,7 +64,7 @@ namespace BaseCamera {
 		}
 
 		Quaternion::operator Quaternion_t() const {
-			return Quaternion_t{ w,x,y,z };
+			return Quaternion_t{ x, y, z, w }; // 严格对应 Unity 的 x, y, z, w
 		}
 
 		Quaternion Quaternion::operator*(const Quaternion& q) const

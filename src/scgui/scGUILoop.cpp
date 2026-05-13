@@ -531,6 +531,18 @@ namespace SCGUILoop {
 				ImGui::InputFloat3("Game Camera LookAt (x, y, z)", &SCGUIData::sysCamLookAt.x);
 				ImGui::InputFloat4("Game Camera Rotation (x, y, z, w)", &SCGUIData::sysCamRot.x);
 
+				// ======== 新增以下代码 ========
+				ImGui::Dummy(ImVec2(0, 5)); // 加一点空隙美化排版
+				if (ImGui::Checkbox("Override Game Camera Rotation", &SCGUIData::enableCustomCamRot)) {
+					// 当勾选开启时，把当前游戏真实的相机角度拿过来作为初始值，平滑过渡
+					if (SCGUIData::enableCustomCamRot) {
+						SCGUIData::customCamRot = SCGUIData::sysCamRot;
+					}
+				}
+				if (SCGUIData::enableCustomCamRot) {
+					ImGui::InputFloat4("Custom Rotation (x, y, z, w)", &SCGUIData::customCamRot.x);
+				}
+
 				if (ImGui::CollapsingHeader("Free Camera", ImGuiTreeNodeFlags_DefaultOpen)) {
 					ImGui::Checkbox("Enable Free Camera", &g_enable_free_camera);
 					ImGui::Checkbox("Enable ClipPlane overriding", &g_reenable_clipPlane);
