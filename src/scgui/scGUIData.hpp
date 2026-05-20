@@ -17,6 +17,10 @@ namespace SCGUIData {
 	extern bool enableCustomCamFov;
 	extern float customCamFov;
 
+	extern bool enableCustomCamFovOffset;
+	extern float customCamFovOffsetAdd;
+	extern float customCamFovOffsetMult;
+
 	extern bool enableCustomCamOffset;
 	extern Vector3_t customCamOffset;
 

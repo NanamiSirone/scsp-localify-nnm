@@ -2630,6 +2630,51 @@ namespace
 				Unity_set_fieldOfView_hook(_this, SCGUIData::customCamFov);
 				return SCGUIData::customCamFov;
 			}
+			// ======== 新增: FOV 相对偏移逻辑 ========
+			else if (SCGUIData::enableCustomCamFovOffset) {
+				static float lastOriginalFov = 60.0f;
+				static float lastOffsettedFov = 60.0f;
+				static float lastCustomFovAdd = 0.0f;
+				static float lastCustomFovMult = 1.0f;
+				static bool firstTimeFovOffset = true;
+
+				// 1. 判断是否需要重新计算：底层 FOV 变了，或者玩家拉动了滑块
+				bool fovChangedByGame = firstTimeFovOffset || std::abs(origFov - lastOffsettedFov) > 0.0001f;
+				bool fovOffsetChangedByUser = firstTimeFovOffset ||
+					std::abs(SCGUIData::customCamFovOffsetAdd - lastCustomFovAdd) > 0.0001f ||
+					std::abs(SCGUIData::customCamFovOffsetMult - lastCustomFovMult) > 0.0001f;
+
+				firstTimeFovOffset = false;
+
+				if (fovChangedByGame || fovOffsetChangedByUser) {
+					if (fovChangedByGame) {
+						lastOriginalFov = origFov; // 捕获到来自 Timeline 的纯净原版 FOV
+						if (guiStarting) SCGUIData::sysCamFov = lastOriginalFov; // 修正 UI 上的原版 FOV 读数
+					}
+
+					// 2. 核心公式: (原生视角 + 加法偏移) * 乘法偏移
+					float newFov = (lastOriginalFov + SCGUIData::customCamFovOffsetAdd) * SCGUIData::customCamFovOffsetMult;
+
+					// 3. 安全钳制: Unity 的 FOV 必须在 1 到 179 之间，否则会报错或画面翻转黑屏
+					if (newFov < 1.0f) newFov = 1.0f;
+					if (newFov > 179.0f) newFov = 179.0f;
+
+					// 4. 记录状态
+					lastOffsettedFov = newFov;
+					lastCustomFovAdd = SCGUIData::customCamFovOffsetAdd;
+					lastCustomFovMult = SCGUIData::customCamFovOffsetMult;
+
+					// 5. 覆盖底层
+					Unity_set_fieldOfView_hook(_this, newFov);
+					return newFov;
+				}
+				else {
+					// 如果毫无变化，直接返回缓存值，彻底切断无限累加
+					return lastOffsettedFov;
+				}
+			}
+
+
 		}
 		// printf("get_fov: %f\n", ret);
 		return origFov;

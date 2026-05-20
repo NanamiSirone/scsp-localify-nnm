@@ -18,6 +18,10 @@ namespace SCGUIData {
 	bool enableCustomCamFov = false;
 	float customCamFov = 60.0f;
 
+	bool enableCustomCamFovOffset = false;
+	float customCamFovOffsetAdd = 0.0f;
+	float customCamFovOffsetMult = 1.0f;  // 乘法默认值必须是 1.0
+
 	bool enableCustomCamOffset = false;
 	Vector3_t customCamOffset = { 0.0f, 0.0f, 0.0f };
 

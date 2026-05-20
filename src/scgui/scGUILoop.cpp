@@ -541,6 +541,23 @@ namespace SCGUILoop {
 					ImGui::SliderFloat("Custom FOV", &SCGUIData::customCamFov, 1.0f, 179.0f);
 				}
 
+				// ======== 新增: FOV 相对偏移 (Relative Offset) ========
+				ImGui::Dummy(ImVec2(0, 5));
+				if (ImGui::Checkbox("Relative Game Camera FOV Offset", &SCGUIData::enableCustomCamFovOffset)) {
+					if (!SCGUIData::enableCustomCamFovOffset) {
+						// 取消勾选时，自动复位到无偏移状态
+						SCGUIData::customCamFovOffsetAdd = 0.0f;
+						SCGUIData::customCamFovOffsetMult = 1.0f;
+					}
+				}
+				if (SCGUIData::enableCustomCamFovOffset) {
+					// 加法滑块：正负 60 足够大部分微调
+					ImGui::SliderFloat("FOV Additive (±)", &SCGUIData::customCamFovOffsetAdd, -60.0f, 60.0f, "%.3f");
+					// 乘法滑块：0.1 到 3.0 倍
+					ImGui::SliderFloat("FOV Multiplier (x)", &SCGUIData::customCamFovOffsetMult, 0.1f, 3.0f, "%.3f");
+				}
+
+
 				ImGui::InputFloat3("Game Camera Pos (x, y, z)", &SCGUIData::sysCamPos.x);
 
 				// ======== 新增以下代码 ========
