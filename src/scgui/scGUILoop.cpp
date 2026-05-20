@@ -531,6 +531,18 @@ namespace SCGUILoop {
 				ImGui::InputFloat3("Game Camera LookAt (x, y, z)", &SCGUIData::sysCamLookAt.x);
 				ImGui::InputFloat4("Game Camera Rotation (x, y, z, w)", &SCGUIData::sysCamRot.x);
 
+				ImGui::Dummy(ImVec2(0, 5));
+				if (ImGui::Checkbox("Override Game Camera FOV", &SCGUIData::enableCustomCamFov)) {
+					if (SCGUIData::enableCustomCamFov) {
+						SCGUIData::customCamFov = SCGUIData::sysCamFov; // 平滑过渡原版FOV
+					}
+				}
+				if (SCGUIData::enableCustomCamFov) {
+					ImGui::SliderFloat("Custom FOV", &SCGUIData::customCamFov, 1.0f, 179.0f);
+				}
+
+				ImGui::InputFloat3("Game Camera Pos (x, y, z)", &SCGUIData::sysCamPos.x);
+
 				// ======== 新增以下代码 ========
 				ImGui::Dummy(ImVec2(0, 5)); // 加一点空隙美化排版
 				if (ImGui::Checkbox("Override Game Camera Rotation", &SCGUIData::enableCustomCamRot)) {
@@ -541,6 +553,20 @@ namespace SCGUILoop {
 				}
 				if (SCGUIData::enableCustomCamRot) {
 					ImGui::InputFloat4("Custom Rotation (x, y, z, w)", &SCGUIData::customCamRot.x);
+				}
+
+				// ======== 新增: 本地坐标偏移覆盖控制 ========
+				ImGui::Dummy(ImVec2(0, 5));
+				if (ImGui::Checkbox("Override Game Camera Offset (Local Space)", &SCGUIData::enableCustomCamOffset)) {
+					if (!SCGUIData::enableCustomCamOffset) {
+						SCGUIData::customCamOffset = { 0.0f, 0.0f, 0.0f }; // 取消勾选时自动复位原位
+					}
+				}
+				if (SCGUIData::enableCustomCamOffset) {
+					// 使用本地坐标系 (Local Space)，Z轴永远是正前方，X轴永远是左右，完美符合直觉！
+					ImGui::SliderFloat("Offset X (Left/Right)", &SCGUIData::customCamOffset.x, -10.0f, 10.0f);
+					ImGui::SliderFloat("Offset Y (Down/Up)", &SCGUIData::customCamOffset.y, -10.0f, 10.0f);
+					ImGui::SliderFloat("Offset Z (Back/Forward)", &SCGUIData::customCamOffset.z, -10.0f, 10.0f);
 				}
 
 				if (ImGui::CollapsingHeader("Free Camera", ImGuiTreeNodeFlags_DefaultOpen)) {

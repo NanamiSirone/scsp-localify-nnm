@@ -1,0 +1,60 @@
+diff --git a/src/hook.cpp b/src/hook.cpp
+index 0000000..0000000 100644
+--- a/src/hook.cpp
++++ b/src/hook.cpp
+@@
+-HOOK_ORIG_TYPE Unity_set_position_orig;
+-
+-HOOK_ORIG_TYPE Unity_get_position_orig;
+-Vector3_t Unity_get_position_hook(void* _this) {
++HOOK_ORIG_TYPE Unity_set_position_orig;
++void Unity_set_position_hook(void* _this, Vector3_t value) {
++	if (_this == baseCameraTransform && !g_enable_free_camera && SCGUIData::enableCustomCamOffset) {
++		auto rot = HOOK_CAST_CALL(Quaternion_t, Unity_get_rotation)(_this);
++		BaseCamera::CameraCalc::Quaternion q(rot.w, rot.x, rot.y, rot.z);
++		BaseCamera::CameraCalc::Quaternion p(
++			0.0f,
++			SCGUIData::customCamOffset.x,
++			SCGUIData::customCamOffset.y,
++			SCGUIData::customCamOffset.z
++		);
++		auto rotated = q * p * q.Conjugate();
++		value.x += rotated.x;
++		value.y += rotated.y;
++		value.z += rotated.z;
++	}
++	return HOOK_CAST_CALL(void, Unity_set_position)(_this, value);
++}
++
++HOOK_ORIG_TYPE Unity_get_position_orig;
++Vector3_t Unity_get_position_hook(void* _this) {
+@@
+-		// ======== 新增: 相机本地空间向量绝对偏移 ========
+-		else if (SCGUIData::enableCustomCamOffset) {
+-			// 1. 将引擎的四元数传入原作者数学库
+-			BaseCamera::CameraCalc::Quaternion q(ret.w, ret.x, ret.y, ret.z);
+-
+-			// 2. 纯粹的数学替代方案：将 UI 上输入的相对坐标转化成一个“纯虚四元数” (W=0)
+-			BaseCamera::CameraCalc::Quaternion p(
+-				0.0f,
+-				SCGUIData::customCamOffset.x,
+-				SCGUIData::customCamOffset.y,
+-				SCGUIData::customCamOffset.z
+-			);
+-
+-			// 3. 施展最高阶的数学魔法：直接利用 q * p * q_inv 将相对坐标系完美映射到世界绝对坐标系
+-			// 这样彻底绕过了没在头文件声明的 RotateVector 编译报错！
+-			BaseCamera::CameraCalc::Quaternion rotated = q * p * q.Conjugate();
+-
+-			// 4. 将算好的真实绝对位移加到原版坐标上
+-			data.x += rotated.x;
+-			data.y += rotated.y;
+-			data.z += rotated.z;
+-
+-			// 5. 跨过游戏所有的限制和墙壁，强行写入坐标系！
+-			Unity_set_position_hook(_this, data);
+-		}
+ 	}
+ 
+ 	return data;
+ }

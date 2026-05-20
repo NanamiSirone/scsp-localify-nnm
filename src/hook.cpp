@@ -1,3 +1,4 @@
+
 #include <stdinclude.hpp>
 #include <unordered_set>
 #include <ranges>
@@ -2237,6 +2238,8 @@ namespace
 		return HOOK_CAST_CALL(void, AssembleCharacter_ApplyParam)(mdl, height, bust, head, arm, hand);
 	}
 
+	void ApplyCustomCameraOffset();
+
 	HOOK_ORIG_TYPE MainThreadDispatcher_LateUpdate_orig;
 	void MainThreadDispatcher_LateUpdate_hook(void* _this, void* method) {
 		try {
@@ -2260,6 +2263,7 @@ namespace
 		catch (std::exception& ex) {
 			printf("MainThreadDispatcher Error: %s\n", ex.what());
 		}
+		ApplyCustomCameraOffset();
 		OverrideAllTransforms();
 		return HOOK_CAST_CALL(void, MainThreadDispatcher_LateUpdate)(_this, method);
 	}
@@ -2589,8 +2593,21 @@ namespace
 		);
 	}
 
+	// Forward declarations for camera hooks/originals used in ApplyCustomCameraOffset
+	extern HOOK_ORIG_TYPE Unity_get_position_orig;
+	extern HOOK_ORIG_TYPE Unity_set_position_orig;
+	extern HOOK_ORIG_TYPE Unity_get_rotation_orig;
+	Vector3_t Unity_get_position_hook(void* _this);
+	Quaternion_t Unity_get_rotation_hook(void* _this);
+	void Unity_set_position_hook(void* _this, Vector3_t value);
+
 	void* baseCameraTransform = nullptr;
 	void* baseCamera = nullptr;
+
+	// 在每帧末尾统一应用相机本地偏移，避免在 getter/setter 中抖动
+	void ApplyCustomCameraOffset() {
+		// 已废弃：移至 Unity_get_position_hook 内处理，以防止被 Timeline 覆盖以及重复偏移
+	}
 
 	HOOK_ORIG_TYPE Unity_set_fieldOfView_orig;
 	void Unity_set_fieldOfView_hook(void* _this, float single) {
@@ -2607,6 +2624,11 @@ namespace
 				const auto fov = SCCamera::baseCamera.fov;
 				Unity_set_fieldOfView_hook(_this, fov);
 				return fov;
+			}
+			// ======== 新增 FOV 覆盖 ========
+			else if (SCGUIData::enableCustomCamFov) {
+				Unity_set_fieldOfView_hook(_this, SCGUIData::customCamFov);
+				return SCGUIData::customCamFov;
 			}
 		}
 		// printf("get_fov: %f\n", ret);
@@ -2721,9 +2743,10 @@ namespace
 	}
 
 	HOOK_ORIG_TYPE Unity_set_position_orig;
-	void Unity_set_position_hook(void* _this, Vector3_t value) {
-		return HOOK_CAST_CALL(void, Unity_set_position)(_this, value);
-	}
+void Unity_set_position_hook(void* _this, Vector3_t value) {
+    return HOOK_CAST_CALL(void, Unity_set_position)(_this, value);
+}
+
 
 	HOOK_ORIG_TYPE Unity_get_position_orig;
 	Vector3_t Unity_get_position_hook(void* _this) {
@@ -2758,6 +2781,55 @@ namespace
 				up->y = 1;
 				up->z = 0;
 				Unity_InternalLookAt_hook(_this, *pos, *up);
+			}
+			else if (SCGUIData::enableCustomCamOffset) {
+				static Vector3_t lastOriginalPos = { 0,0,0 };
+				static Vector3_t lastOffsettedPos = { 0,0,0 };
+				static Vector3_t lastCustomOffset = { 0,0,0 };
+				static bool firstTimeOffset = true;
+
+				bool positionChangedByGame = firstTimeOffset ||
+					std::abs(data.x - lastOffsettedPos.x) > 0.0001f ||
+					std::abs(data.y - lastOffsettedPos.y) > 0.0001f ||
+					std::abs(data.z - lastOffsettedPos.z) > 0.0001f;
+
+				bool offsetChangedByUser = firstTimeOffset ||
+					std::abs(SCGUIData::customCamOffset.x - lastCustomOffset.x) > 0.0001f ||
+					std::abs(SCGUIData::customCamOffset.y - lastCustomOffset.y) > 0.0001f ||
+					std::abs(SCGUIData::customCamOffset.z - lastCustomOffset.z) > 0.0001f;
+
+				firstTimeOffset = false;
+
+				if (positionChangedByGame || offsetChangedByUser) {
+					if (positionChangedByGame) {
+						lastOriginalPos = data;
+					}
+					else {
+						data = lastOriginalPos; // 从未偏移的原始位置重新计算
+					}
+
+					auto rot = Unity_get_rotation_hook(_this);
+					BaseCamera::CameraCalc::Quaternion q(rot.w, rot.x, rot.y, rot.z);
+					BaseCamera::CameraCalc::Quaternion p(
+						0.0f,
+						SCGUIData::customCamOffset.x,
+						SCGUIData::customCamOffset.y,
+						SCGUIData::customCamOffset.z
+					);
+					auto rotated = q * p * q.Conjugate();
+
+					data.x += rotated.x;
+					data.y += rotated.y;
+					data.z += rotated.z;
+
+					lastOffsettedPos = data;
+					lastCustomOffset = SCGUIData::customCamOffset;
+
+					Unity_set_position_hook(_this, data);
+				}
+				else {
+					data = lastOffsettedPos;
+				}
 			}
 		}
 
