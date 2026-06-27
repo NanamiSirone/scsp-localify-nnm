@@ -563,30 +563,13 @@ namespace SCGUILoop {
 				// ======== 新增以下代码 ========
 				ImGui::Dummy(ImVec2(0, 5)); // 加一点空隙美化排版
 				if (ImGui::Checkbox("Override Game Camera Rotation", &SCGUIData::enableCustomCamRot)) {
-
+					// 当勾选开启时，把当前游戏真实的相机角度拿过来作为初始值，平滑过渡
 					if (SCGUIData::enableCustomCamRot) {
 						SCGUIData::customCamRot = SCGUIData::sysCamRot;
-						// 开启的瞬间：读取底层真实的四元数，转换为欧拉角(弧度)
-						auto eulerRad = BaseCamera::CameraCalc::Quaternion(SCGUIData::sysCamRot).ToEuler();
-						// 将弧度转换为角度(Degrees)并赋值给 UI 滑块
-						SCGUIData::customCamRotEuler.x = eulerRad.x * (180.0f / M_PI);
-						SCGUIData::customCamRotEuler.y = eulerRad.y * (180.0f / M_PI);
-						SCGUIData::customCamRotEuler.z = eulerRad.z * (180.0f / M_PI);
 					}
 				}
 				if (SCGUIData::enableCustomCamRot) {
 					ImGui::InputFloat4("Custom Rotation (x, y, z, w)", &SCGUIData::customCamRot.x);
-					// 使用 DragFloat3 替换 InputFloat4 实现丝滑拖动，0.5f 为鼠标拖动的速度灵敏度
-					if (ImGui::DragFloat3("Custom Rotation (X, Y, Z)", &SCGUIData::customCamRotEuler.x, 0.5f)) {
-						// 当玩家拖动滑块数值改变时：将 UI 上的角度(Degrees)转回弧度
-						BaseCamera::CameraCalc::Vector3 eulerRad(
-							SCGUIData::customCamRotEuler.x * (M_PI / 180.0f),
-							SCGUIData::customCamRotEuler.y * (M_PI / 180.0f),
-							SCGUIData::customCamRotEuler.z * (M_PI / 180.0f)
-						);
-						// 重新生成底层渲染引擎所需的四元数，并更新到 customCamRot 中
-						SCGUIData::customCamRot = BaseCamera::CameraCalc::Quaternion::FromEuler(eulerRad);
-					}
 				}
 
 				// ======== 新增: 本地坐标偏移覆盖控制 ========

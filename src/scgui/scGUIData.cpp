@@ -14,7 +14,6 @@ namespace SCGUIData {
 
 	bool enableCustomCamRot = false;
 	Quaternion_t customCamRot{ 0.0f, 0.0f, 0.0f, 1.0f }; // 默认初始值给个合法的四元数
-	Vector3_t customCamRotEuler{ 0.0f, 0.0f, 0.0f };
 
 	bool enableCustomCamFov = false;
 	float customCamFov = 60.0f;
