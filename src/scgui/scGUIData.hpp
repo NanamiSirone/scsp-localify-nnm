@@ -13,6 +13,7 @@ namespace SCGUIData {
 
 	extern bool enableCustomCamRot;       // 是否启用自定义旋转覆盖
 	extern Quaternion_t customCamRot;     // 存储用户输入的自定义旋转
+	extern Vector3_t customCamRotEuler;
 
 	extern bool enableCustomCamFov;
 	extern float customCamFov;
