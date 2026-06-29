@@ -626,6 +626,12 @@ namespace SCGUILoop {
 					ImGui::SliderFloat("Custom Far Clip", &SCGUIData::customCamFarClip, 100.0f, 10000.0f);
 				}
 
+				// ======== 新增: 禁用景深 (Depth of Field) ========
+				ImGui::Dummy(ImVec2(0, 5));
+				ImGui::Checkbox("Disable Depth of Field (Anti-Blur)", &SCGUIData::disableDepthOfField);
+				ImGui::SameLine();
+				HELP_TOOLTIP("(?)", "禁用全局景深效果，解决相机贴近角色时出现的画面虚化问题。");
+
 
 				if (ImGui::CollapsingHeader("Free Camera", ImGuiTreeNodeFlags_DefaultOpen)) {
 					ImGui::Checkbox("Enable Free Camera", &g_enable_free_camera);

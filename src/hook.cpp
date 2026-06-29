@@ -2750,6 +2750,15 @@ namespace
 		HOOK_CAST_CALL(void, Unity_set_farClipPlane)(_this, value);
 	}
 
+	// ======== 新增: 禁用景深 (Depth of Field) ========
+	HOOK_ORIG_TYPE DepthOfField_IsActive_orig;
+	bool DepthOfField_IsActive_hook(void* _this) {
+		if (SCGUIData::disableDepthOfField) {
+			return false; // 强制告诉渲染管线：景深未激活
+		}
+		return HOOK_CAST_CALL(bool, DepthOfField_IsActive)(_this);
+	}
+
 	HOOK_ORIG_TYPE Unity_set_rotation_orig;
 	void Unity_set_rotation_hook(void* _this, Quaternion_t value) {
 		return HOOK_CAST_CALL(void, Unity_set_rotation)(_this, value);
@@ -3387,6 +3396,12 @@ void Unity_set_position_hook(void* _this, Vector3_t value) {
 		//	"ResourceLoader", "UnsafeLoadBytesFromKey", 2
 		//);
 
+		auto DepthOfField_IsActive_addr = il2cpp_symbols::get_method_pointer(
+			"Unity.RenderPipelines.Universal.Runtime.dll", "UnityEngine.Rendering.Universal",
+			"DepthOfField", "IsActive", 0
+		);
+
+
 		auto TextLog_AddLog_addr = il2cpp_symbols::get_method_pointer(
 			"PRISM.Legacy.dll", "PRISM.Scenario",
 			"TextLog", "AddLog", 4
@@ -3686,6 +3701,7 @@ void Unity_set_position_hook(void* _this, Vector3_t value) {
 		ADD_HOOK_1(StoryExtensions_IsLocked);
 		ADD_HOOK(LocalizationManager_GetTextOrNull, "LocalizationManager_GetTextOrNull at %p");
 		ADD_HOOK(GetResolutionSize, "GetResolutionSize at %p");
+		ADD_HOOK(DepthOfField_IsActive, "DepthOfField_IsActive at %p");  //新增加景深控制 
 		ADD_HOOK(AssetBundle_LoadAsset, "AssetBundle_LoadAsset at %p");
 		ADD_HOOK(LiveMVOverlayView_UpdateLyrics, "LiveMVOverlayView_UpdateLyrics at %p");
 		ADD_HOOK(TimelineController_SetLyric, "TimelineController_SetLyric at %p");

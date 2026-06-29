@@ -32,7 +32,9 @@ namespace SCGUIData {
 
 	float sysCamFarClip = 1000.0f;          
 	bool enableCustomCamFarClip = false;     
-	float customCamFarClip = 1000.0f;       
+	float customCamFarClip = 1000.0f;
+
+	bool disableDepthOfField = false;
 
 	void updateSysCamLookAt() {
 		BaseCamera::CameraPosRotToLookAt(sysCamPos, sysCamRot, &sysCamLookAt);
