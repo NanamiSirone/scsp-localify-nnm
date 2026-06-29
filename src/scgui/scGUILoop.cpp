@@ -603,6 +603,30 @@ namespace SCGUILoop {
 					ImGui::SliderFloat("Offset Z (Back/Forward)", &SCGUIData::customCamOffset.z, -10.0f, 10.0f);
 				}
 
+				// ======== 新增: 裁切面 (Clip Plane) 覆盖控制 ========
+				ImGui::Dummy(ImVec2(0, 5));
+				ImGui::InputFloat("Game Camera Near Clip", &SCGUIData::sysCamNearClip);
+				if (ImGui::Checkbox("Override Game Camera Near Clip", &SCGUIData::enableCustomCamNearClip)) {
+					if (SCGUIData::enableCustomCamNearClip) {
+						SCGUIData::customCamNearClip = SCGUIData::sysCamNearClip;
+					}
+				}
+				if (SCGUIData::enableCustomCamNearClip) {
+					ImGui::SliderFloat("Custom Near Clip", &SCGUIData::customCamNearClip, 0.001f, 10.0f);
+				}
+
+				ImGui::Dummy(ImVec2(0, 5));
+				ImGui::InputFloat("Game Camera Far Clip", &SCGUIData::sysCamFarClip);
+				if (ImGui::Checkbox("Override Game Camera Far Clip", &SCGUIData::enableCustomCamFarClip)) {
+					if (SCGUIData::enableCustomCamFarClip) {
+						SCGUIData::customCamFarClip = SCGUIData::sysCamFarClip;
+					}
+				}
+				if (SCGUIData::enableCustomCamFarClip) {
+					ImGui::SliderFloat("Custom Far Clip", &SCGUIData::customCamFarClip, 100.0f, 10000.0f);
+				}
+
+
 				if (ImGui::CollapsingHeader("Free Camera", ImGuiTreeNodeFlags_DefaultOpen)) {
 					ImGui::Checkbox("Enable Free Camera", &g_enable_free_camera);
 					ImGui::Checkbox("Enable ClipPlane overriding", &g_reenable_clipPlane);

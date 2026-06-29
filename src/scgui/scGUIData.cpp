@@ -26,6 +26,13 @@ namespace SCGUIData {
 	bool enableCustomCamOffset = false;
 	Vector3_t customCamOffset = { 0.0f, 0.0f, 0.0f };
 
+	float sysCamNearClip = 0.3f;
+	bool enableCustomCamNearClip = false;
+	float customCamNearClip = 0.3f;
+
+	float sysCamFarClip = 1000.0f;          
+	bool enableCustomCamFarClip = false;     
+	float customCamFarClip = 1000.0f;       
 
 	void updateSysCamLookAt() {
 		BaseCamera::CameraPosRotToLookAt(sysCamPos, sysCamRot, &sysCamLookAt);

@@ -25,5 +25,12 @@ namespace SCGUIData {
 	extern bool enableCustomCamOffset;
 	extern Vector3_t customCamOffset;
 
+	extern float sysCamNearClip;
+	extern bool enableCustomCamNearClip;
+	extern float customCamNearClip;
+
+	extern float sysCamFarClip;              // <--- 新增
+	extern bool enableCustomCamFarClip;      // <--- 新增
+	extern float customCamFarClip;           // <--- 新增
 	void updateSysCamLookAt();
 }

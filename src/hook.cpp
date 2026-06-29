@@ -2699,6 +2699,10 @@ namespace
 			if (g_enable_free_camera && g_reenable_clipPlane) {
 				single = g_nearClipPlane;
 			}
+			// ======== 新增 近端裁切 覆盖 ========
+			else if (SCGUIData::enableCustomCamNearClip) {
+				single = SCGUIData::customCamNearClip;
+			}
 		}
 		return HOOK_CAST_CALL(void, Unity_set_nearClipPlane)(_this, single);
 	}
@@ -2707,9 +2711,15 @@ namespace
 	float Unity_get_nearClipPlane_hook(void* _this) {
 		auto ret = HOOK_CAST_CALL(float, Unity_get_nearClipPlane)(_this);
 		if (_this == baseCamera) {
+			if (guiStarting) {                                   // <--- 新增
+				SCGUIData::sysCamNearClip = ret;                 // <--- 新增
+			}                                                    // <--- 新增
 			if (g_enable_free_camera && g_reenable_clipPlane) {
 				ret = g_nearClipPlane;
 			}
+			else if (SCGUIData::enableCustomCamNearClip) {       // <--- 新增
+				ret = SCGUIData::customCamNearClip;              // <--- 新增
+			}                                                    // <--- 新增
 		}
 		return ret;
 	}
@@ -2720,6 +2730,9 @@ namespace
 			if (g_enable_free_camera && g_reenable_clipPlane) {
 				ret = g_farClipPlane;
 			}
+			else if (SCGUIData::enableCustomCamFarClip) {       // <--- 新增
+				ret = SCGUIData::customCamFarClip;              // <--- 新增
+			}                                                   // <--- 新增
 		}
 		return ret;
 	}
@@ -2729,6 +2742,9 @@ namespace
 		if (_this == baseCamera) {
 			if (g_enable_free_camera && g_reenable_clipPlane) {
 				value = g_farClipPlane;
+			}
+			else if (SCGUIData::enableCustomCamFarClip) {
+				value = SCGUIData::customCamFarClip;
 			}
 		}
 		HOOK_CAST_CALL(void, Unity_set_farClipPlane)(_this, value);
