@@ -32,5 +32,7 @@ namespace SCGUIData {
 	extern float sysCamFarClip;              // <--- 新增
 	extern bool enableCustomCamFarClip;      // <--- 新增
 	extern float customCamFarClip;           // <--- 新增
+
+	extern bool disableDepthOfField;
 	void updateSysCamLookAt();
 }
