@@ -36,6 +36,8 @@ namespace SCGUIData {
 
 	bool disableDepthOfField = false;
 
+	bool disableCharacterNearFade = false;   // <--- 新增：默认不禁用
+
 	void updateSysCamLookAt() {
 		BaseCamera::CameraPosRotToLookAt(sysCamPos, sysCamRot, &sysCamLookAt);
 	}
