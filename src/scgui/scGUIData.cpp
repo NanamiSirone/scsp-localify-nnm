@@ -16,6 +16,13 @@ namespace SCGUIData {
 	Quaternion_t customCamRot{ 0.0f, 0.0f, 0.0f, 1.0f }; // 默认初始值给个合法的四元数
 	Vector3_t customCamRotEuler{ 0.0f, 0.0f, 0.0f };
 
+	// ======== 新增: 旋转补偿位移 ========
+	bool enableRotToPosComp = false;
+	float rotToPosDist = 5.0f;           // 默认假设角色距离相机 5 米
+	Vector3_t compPosOffset = { 0.0f, 0.0f, 0.0f };
+	Quaternion_t refGameRot = { 0.0f, 0.0f, 0.0f, 1.0f };
+	bool isRefRotSet = false;
+
 	bool enableCustomCamFov = false;
 	float customCamFov = 60.0f;
 

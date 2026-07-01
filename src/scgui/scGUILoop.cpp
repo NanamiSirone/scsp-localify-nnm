@@ -589,6 +589,26 @@ namespace SCGUILoop {
 					}
 				}
 
+				// ======== 新增: 旋转补偿位移 UI ========
+				ImGui::Dummy(ImVec2(0, 5));
+				if (ImGui::Checkbox("Enable Rotation-to-Position Compensation", &SCGUIData::enableRotToPosComp)) {
+					if (!SCGUIData::enableRotToPosComp) {
+						SCGUIData::isRefRotSet = false;
+					}
+				}
+				ImGui::SameLine();
+				HELP_TOOLTIP("(?)", "当锁定相机旋转时，将游戏原本的镜头转动转化为相机的平移移动，防止角色走出画面。");
+
+				if (SCGUIData::enableRotToPosComp) {
+					ImGui::SliderFloat("Target Distance (Scale)", &SCGUIData::rotToPosDist, 0.1f, 50.0f, "%.2f m");
+					ImGui::SameLine();
+					HELP_TOOLTIP("(?)", "调整此数值以匹配角色到相机的实际距离。数值越大，相机平移的幅度越大。");
+
+					if (ImGui::Button("Reset Reference Point")) {
+						SCGUIData::isRefRotSet = false;
+					}
+				}
+
 				// ======== 新增: 本地坐标偏移覆盖控制 ========
 				ImGui::Dummy(ImVec2(0, 5));
 				if (ImGui::Checkbox("Override Game Camera Offset (Local Space)", &SCGUIData::enableCustomCamOffset)) {

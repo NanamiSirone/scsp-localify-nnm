@@ -2792,6 +2792,15 @@ namespace
 	void Unity_set_rotation_hook(void* _this, Quaternion_t value) {
 		return HOOK_CAST_CALL(void, Unity_set_rotation)(_this, value);
 	}
+
+	// ======== 新增: 旋转补偿辅助函数 ========
+	Vector3_t GetForwardVector(const Quaternion_t& q) {
+		return {
+			2.0f * (q.x * q.z + q.w * q.y),
+			2.0f * (q.y * q.z - q.w * q.x),
+			1.0f - 2.0f * (q.x * q.x + q.y * q.y)
+		};
+	}
 	HOOK_ORIG_TYPE Unity_get_rotation_orig;
 	Quaternion_t Unity_get_rotation_hook(void* _this) {
 		auto ret = HOOK_CAST_CALL(Quaternion_t, Unity_get_rotation)(_this);
@@ -2804,6 +2813,26 @@ namespace
 				SCGUIData::sysCamRot.z = ret.z;
 				SCGUIData::updateSysCamLookAt();
 			}
+
+			// ======== 新增: 旁路计算旋转补偿位移 (不干扰原有逻辑) ========
+			if (SCGUIData::enableRotToPosComp) {
+				if (!SCGUIData::isRefRotSet) {
+					SCGUIData::refGameRot = ret; // 记录原始旋转
+					SCGUIData::isRefRotSet = true;
+				}
+				Vector3_t refFwd = GetForwardVector(SCGUIData::refGameRot);
+				Vector3_t gameFwd = GetForwardVector(ret);
+
+				SCGUIData::compPosOffset.x = (gameFwd.x - refFwd.x) * SCGUIData::rotToPosDist;
+				SCGUIData::compPosOffset.y = (gameFwd.y - refFwd.y) * SCGUIData::rotToPosDist;
+				SCGUIData::compPosOffset.z = (gameFwd.z - refFwd.z) * SCGUIData::rotToPosDist;
+			}
+			else {
+				SCGUIData::isRefRotSet = false;
+				SCGUIData::compPosOffset = { 0.0f, 0.0f, 0.0f };
+			}
+			// ==============================================================
+
 			if (g_enable_free_camera) {
 				ret.w = 0;
 				ret.x = 0;
@@ -2847,41 +2876,50 @@ void Unity_set_position_hook(void* _this, Vector3_t value) {
 }
 
 
-	HOOK_ORIG_TYPE Unity_get_position_orig;
-	Vector3_t Unity_get_position_hook(void* _this) {
-		auto data = HOOK_CAST_CALL(Vector3_t, Unity_get_position)(_this);
-		if (_this == baseCameraTransform) {
-			auto ret = Unity_get_rotation_hook(_this);
-			if (guiStarting) {
-				SCGUIData::sysCamPos.x = data.x;
-				SCGUIData::sysCamPos.y = data.y;
-				SCGUIData::sysCamPos.z = data.z;
+HOOK_ORIG_TYPE Unity_get_position_orig;
+Vector3_t Unity_get_position_hook(void* _this) {
+	auto data = HOOK_CAST_CALL(Vector3_t, Unity_get_position)(_this);
+	if (_this == baseCameraTransform) {
+		auto ret = Unity_get_rotation_hook(_this);
+		if (guiStarting) {
+			SCGUIData::sysCamPos.x = data.x;
+			SCGUIData::sysCamPos.y = data.y;
+			SCGUIData::sysCamPos.z = data.z;
 
-				SCGUIData::sysCamRot.w = ret.w;
-				SCGUIData::sysCamRot.x = ret.x;
-				SCGUIData::sysCamRot.y = ret.y;
-				SCGUIData::sysCamRot.z = ret.z;
-				SCGUIData::updateSysCamLookAt();
+			SCGUIData::sysCamRot.w = ret.w;
+			SCGUIData::sysCamRot.x = ret.x;
+			SCGUIData::sysCamRot.y = ret.y;
+			SCGUIData::sysCamRot.z = ret.z;
+			SCGUIData::updateSysCamLookAt();
+		}
+		if (g_enable_free_camera) {
+			SCCamera::baseCamera.updateOtherPos(&data);
+			Unity_set_position_hook(_this, data);
+
+			ret.w = 0;
+			ret.x = 0;
+			ret.y = 0;
+			ret.z = 0;
+			Unity_set_rotation_hook(_this, ret);
+
+			static auto Vector3_klass = il2cpp_symbols::get_class("UnityEngine.CoreModule.dll", "UnityEngine", "Vector3");
+			Vector3_t* pos = reinterpret_cast<Vector3_t*>(il2cpp_object_new(Vector3_klass));
+			Vector3_t* up = reinterpret_cast<Vector3_t*>(il2cpp_object_new(Vector3_klass));
+			up->x = 0;
+			up->y = 1;
+			up->z = 0;
+			Unity_InternalLookAt_hook(_this, *pos, *up);
+		}
+		else {
+			// ======== 新增: 叠加旋转补偿位移 ========
+			if (SCGUIData::enableRotToPosComp) {
+				data.x += SCGUIData::compPosOffset.x;
+				data.y += SCGUIData::compPosOffset.y;
+				data.z += SCGUIData::compPosOffset.z;
 			}
-			if (g_enable_free_camera) {
-				SCCamera::baseCamera.updateOtherPos(&data);
-				Unity_set_position_hook(_this, data);
+			// ========================================
 
-				ret.w = 0;
-				ret.x = 0;
-				ret.y = 0;
-				ret.z = 0;
-				Unity_set_rotation_hook(_this, ret);
-
-				static auto Vector3_klass = il2cpp_symbols::get_class("UnityEngine.CoreModule.dll", "UnityEngine", "Vector3");
-				Vector3_t* pos = reinterpret_cast<Vector3_t*>(il2cpp_object_new(Vector3_klass));
-				Vector3_t* up = reinterpret_cast<Vector3_t*>(il2cpp_object_new(Vector3_klass));
-				up->x = 0;
-				up->y = 1;
-				up->z = 0;
-				Unity_InternalLookAt_hook(_this, *pos, *up);
-			}
-			else if (SCGUIData::enableCustomCamOffset) {
+			if (SCGUIData::enableCustomCamOffset) {
 				static Vector3_t lastOriginalPos = { 0,0,0 };
 				static Vector3_t lastOffsettedPos = { 0,0,0 };
 				static Vector3_t lastCustomOffset = { 0,0,0 };
@@ -2930,10 +2968,16 @@ void Unity_set_position_hook(void* _this, Vector3_t value) {
 					data = lastOffsettedPos;
 				}
 			}
+			// ======== 新增: 如果没开 Offset 但开了补偿，需要写回引擎 ========
+			else if (SCGUIData::enableRotToPosComp) {
+				Unity_set_position_hook(_this, data);
+			}
+			// ==================================================================
 		}
-
-		return data;
 	}
+
+	return data;
+}
 
 
 	HOOK_ORIG_TYPE get_baseCamera_orig;
