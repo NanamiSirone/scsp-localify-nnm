@@ -2750,44 +2750,6 @@ namespace
 		HOOK_CAST_CALL(void, Unity_set_farClipPlane)(_this, value);
 	}
 
-	// ======== 新增: 禁用景深 (Depth of Field) ========
-	HOOK_ORIG_TYPE DepthOfField_IsActive_orig;
-	bool DepthOfField_IsActive_hook(void* _this) {
-		if (SCGUIData::disableDepthOfField) {
-			return false; // 强制告诉渲染管线：景深未激活
-		}
-		return HOOK_CAST_CALL(bool, DepthOfField_IsActive)(_this);
-	}
-
-	// ======== 新增: 禁用角色近端虚化 (Camera Near Fade) ========
-	HOOK_ORIG_TYPE Shader_SetGlobalFloat_orig;
-	void Shader_SetGlobalFloat_hook(int nameID, float value) {
-		if (SCGUIData::disableCharacterNearFade) {
-			// 拦截常见的控制虚化距离的 Shader 变量名 (通过 ID 匹配)
-			// 游戏引擎通常会把 _FadeDistance, _CameraFade, _NearFade 等设为 0.5 左右
-			// 我们强制将其设为 0.0f 或 -1.0f，让虚化永远不触发
-			static int fadeDistID1 = 0;
-			static int fadeDistID2 = 0;
-			static int fadeDistID3 = 0;
-
-			if (fadeDistID1 == 0) {
-				// 首次运行时获取这些常见变量的底层 ID
-				static auto PropertyToID = reinterpret_cast<int(*)(Il2CppString*)>(
-					il2cpp_symbols::get_method_pointer("UnityEngine.CoreModule.dll", "UnityEngine", "Shader", "PropertyToID", 1)
-					);
-				fadeDistID1 = PropertyToID(il2cpp_symbols::NewWStr(L"_FadeDistance"));
-				fadeDistID2 = PropertyToID(il2cpp_symbols::NewWStr(L"_CameraFadeDistance"));
-				fadeDistID3 = PropertyToID(il2cpp_symbols::NewWStr(L"_NearFadeDistance"));
-			}
-
-			if (nameID == fadeDistID1 || nameID == fadeDistID2 || nameID == fadeDistID3) {
-				value = 0.0f; // 强制将虚化距离设为 0
-			}
-		}
-		HOOK_CAST_CALL(void, Shader_SetGlobalFloat)(nameID, value);
-	}
-
-
 	HOOK_ORIG_TYPE Unity_set_rotation_orig;
 	void Unity_set_rotation_hook(void* _this, Quaternion_t value) {
 		return HOOK_CAST_CALL(void, Unity_set_rotation)(_this, value);
@@ -3469,18 +3431,6 @@ Vector3_t Unity_get_position_hook(void* _this) {
 		//	"ResourceLoader", "UnsafeLoadBytesFromKey", 2
 		//);
 
-		auto DepthOfField_IsActive_addr = il2cpp_symbols::get_method_pointer(
-			"Unity.RenderPipelines.Universal.Runtime.dll", "UnityEngine.Rendering.Universal",
-			"DepthOfField", "IsActive", 0
-		);
-
-		// ======== 新增: 获取 Shader.SetGlobalFloat 地址 ========
-		auto Shader_SetGlobalFloat_addr = il2cpp_symbols::get_method_pointer(
-			"UnityEngine.CoreModule.dll", "UnityEngine",
-			"Shader", "SetGlobalFloat", 2
-		);
-
-
 		auto TextLog_AddLog_addr = il2cpp_symbols::get_method_pointer(
 			"PRISM.Legacy.dll", "PRISM.Scenario",
 			"TextLog", "AddLog", 4
@@ -3780,8 +3730,6 @@ Vector3_t Unity_get_position_hook(void* _this) {
 		ADD_HOOK_1(StoryExtensions_IsLocked);
 		ADD_HOOK(LocalizationManager_GetTextOrNull, "LocalizationManager_GetTextOrNull at %p");
 		ADD_HOOK(GetResolutionSize, "GetResolutionSize at %p");
-		ADD_HOOK(DepthOfField_IsActive, "DepthOfField_IsActive at %p");  //新增加景深控制 
-		ADD_HOOK(Shader_SetGlobalFloat, "Shader_SetGlobalFloat at %p");  // ======== 新增: 注册 Shader Hook ========
 		ADD_HOOK(AssetBundle_LoadAsset, "AssetBundle_LoadAsset at %p");
 		ADD_HOOK(LiveMVOverlayView_UpdateLyrics, "LiveMVOverlayView_UpdateLyrics at %p");
 		ADD_HOOK(TimelineController_SetLyric, "TimelineController_SetLyric at %p");

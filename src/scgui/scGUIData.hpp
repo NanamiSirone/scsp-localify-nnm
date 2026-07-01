@@ -39,9 +39,5 @@ namespace SCGUIData {
 	extern float sysCamFarClip;              // <--- 新增
 	extern bool enableCustomCamFarClip;      // <--- 新增
 	extern float customCamFarClip;           // <--- 新增
-
-	extern bool disableDepthOfField;
-
-	extern bool disableCharacterNearFade;    // <--- 新增：禁用角色近端虚化
 	void updateSysCamLookAt();
 }
